@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract Presale is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -112,7 +112,7 @@ contract Presale is Ownable, ReentrancyGuard {
     /**
      * Returns the latest price.
      */
-    function getETHLatestPrice() public view returns (int) {
+    function getETHLatestPrice() public view returns (uint256) {
         // prettier-ignore
         (
             /* uint80 roundID */,
@@ -121,7 +121,7 @@ contract Presale is Ownable, ReentrancyGuard {
             /*uint timeStamp*/,
             /*uint80 answeredInRound*/
         ) = priceFeed.latestRoundData();
-        return price;
+        return uint256(price) / 10 ** 10;
     }
 
     // Whitelist function for Phase 0
@@ -188,7 +188,7 @@ contract Presale is Ownable, ReentrancyGuard {
                 "Insufficient WETH allowance"
             );
 
-            bool transferSuccess = weth.safetransferFrom(
+            bool transferSuccess = weth.transferFrom(
                 msg.sender,
                 address(this),
                 (tokensToBuy * phases[currentPhase].tokenPrice) /
@@ -203,7 +203,7 @@ contract Presale is Ownable, ReentrancyGuard {
                 "Insufficient USDC allowance"
             );
 
-            bool transferSuccess = usdc.safetransferFrom(
+            bool transferSuccess = usdc.transferFrom(
                 msg.sender,
                 address(this),
                 tokensToBuy * phases[currentPhase].tokenPrice
@@ -234,7 +234,7 @@ contract Presale is Ownable, ReentrancyGuard {
         require(balance > 0, "No tokens to claim");
 
         balances[msg.sender] = 0;
-        token.safetransfer(msg.sender, balance);
+        token.transfer(msg.sender, balance);
 
         emit TokensClaimed(msg.sender, balance);
     }
@@ -244,13 +244,19 @@ contract Presale is Ownable, ReentrancyGuard {
     }
 
     function withdrawWeth(address _masterWallet) external onlyOwner {
-        require(_masterWallet != 0, "Walelt address should be valid address");
+        require(
+            _masterWallet != address(0),
+            "Walelt address should be valid address"
+        );
 
         weth.safeTransfer(_masterWallet, weth.balanceOf(address(this)));
     }
 
     function withdrawUsdc(address _masterWallet) external onlyOwner {
-        require(_masterWallet != 0, "Walelt address should be valid address");
+        require(
+            _masterWallet != address(0),
+            "Walelt address should be valid address"
+        );
 
         usdc.safeTransfer(_masterWallet, usdc.balanceOf(address(this)));
     }
