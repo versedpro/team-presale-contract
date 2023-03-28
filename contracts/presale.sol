@@ -121,7 +121,7 @@ contract Presale is Ownable, ReentrancyGuard {
             /*uint timeStamp*/,
             /*uint80 answeredInRound*/
         ) = priceFeed.latestRoundData();
-        return uint256(price) / 10 ** 10;
+        return uint256(price) / 10 ** 8;
     }
 
     // Whitelist function for Phase 0
