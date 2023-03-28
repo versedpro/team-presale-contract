@@ -5,8 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract Presale is Ownable {
+contract Presale is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     AggregatorV3Interface internal priceFeed;
@@ -17,7 +18,6 @@ contract Presale is Ownable {
         uint256 tokenPrice;
         uint256 minPurchase;
         uint256 maxPurchase;
-        bool isStarted;
     }
 
     mapping(uint256 => Phase) public phases;
@@ -69,8 +69,7 @@ contract Presale is Ownable {
             maxPurchase: 2500,
             tokensAvailable: 1500000,
             tokenPrice: 40,
-            tokensSold: 0,
-            isStarted: true
+            tokensSold: 0
         });
 
         // Phase 1
@@ -79,8 +78,7 @@ contract Presale is Ownable {
             maxPurchase: 5000,
             tokensAvailable: 875000,
             tokenPrice: 44,
-            tokensSold: 0,
-            isStarted: false
+            tokensSold: 0
         });
 
         // Phase 2
@@ -89,8 +87,7 @@ contract Presale is Ownable {
             maxPurchase: 7500,
             tokensAvailable: 875000,
             tokenPrice: 46,
-            tokensSold: 0,
-            isStarted: false
+            tokensSold: 0
         });
 
         // Phase 3
@@ -99,8 +96,7 @@ contract Presale is Ownable {
             maxPurchase: 7500,
             tokensAvailable: 875000,
             tokenPrice: 48,
-            tokensSold: 0,
-            isStarted: false
+            tokensSold: 0
         });
 
         // Phase 4
@@ -109,8 +105,7 @@ contract Presale is Ownable {
             maxPurchase: 10000,
             tokensAvailable: 875000,
             tokenPrice: 50,
-            tokensSold: 0,
-            isStarted: false
+            tokensSold: 0
         });
     }
 
@@ -153,21 +148,10 @@ contract Presale is Ownable {
         emit ClaimingEnabled(_enabled);
     }
 
-    function getTokenAmount() internal returns (uint256) {
-        require(msg.value > 0, "Invalid amount");
-        // require(block.timestamp < presaleEndTime, "Presale has ended");
-
-        // uint256 amount = _value.mul(exchangeRate);
-        // balances[_sender] = balances[_sender].add(amount);
-        // totalNativeTokenRaised = totalNativeTokenRaised.add(_value);
-
-        return 1;
-    }
-
     function buyTokens(
         uint256 _amount,
         bool _isWithWETH
-    ) public payable claimEnabled {
+    ) public payable nonReentrant claimEnabled {
         require(currentPhase < 5, "Presale has ended");
         require(
             whitelist[msg.sender] || currentPhase > 0,
@@ -204,7 +188,7 @@ contract Presale is Ownable {
                 "Insufficient WETH allowance"
             );
 
-            bool transferSuccess = weth.transferFrom(
+            bool transferSuccess = weth.safetransferFrom(
                 msg.sender,
                 address(this),
                 (tokensToBuy * phases[currentPhase].tokenPrice) /
@@ -219,7 +203,7 @@ contract Presale is Ownable {
                 "Insufficient USDC allowance"
             );
 
-            bool transferSuccess = usdc.transferFrom(
+            bool transferSuccess = usdc.safetransferFrom(
                 msg.sender,
                 address(this),
                 tokensToBuy * phases[currentPhase].tokenPrice
@@ -239,18 +223,35 @@ contract Presale is Ownable {
         );
     }
 
-    function claimTokens() external claimEnabled {
-        require(block.timestamp > endTime, "Presale is still ongoing");
+    function claimTokens(
+        uint256 _timestamp
+    ) external nonReentrant claimEnabled {
+        require(
+            block.timestamp > endTime && _timestamp > endTime,
+            "Presale is still ongoing"
+        );
         uint256 balance = balances[msg.sender];
         require(balance > 0, "No tokens to claim");
 
         balances[msg.sender] = 0;
-        token.transfer(msg.sender, balance);
+        token.safetransfer(msg.sender, balance);
 
         emit TokensClaimed(msg.sender, balance);
     }
 
     function withdrawFunds() external onlyOwner {
         payable(owner()).transfer(address(this).balance);
+    }
+
+    function withdrawWeth(address _masterWallet) external onlyOwner {
+        require(_masterWallet != 0, "Walelt address should be valid address");
+
+        weth.safeTransfer(_masterWallet, weth.balanceOf(address(this)));
+    }
+
+    function withdrawUsdc(address _masterWallet) external onlyOwner {
+        require(_masterWallet != 0, "Walelt address should be valid address");
+
+        usdc.safeTransfer(_masterWallet, usdc.balanceOf(address(this)));
     }
 }
