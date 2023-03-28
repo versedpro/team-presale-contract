@@ -25,8 +25,9 @@ contract Presale is Ownable {
     mapping(address => uint256) public balances; // Balances of buyers
 
     IERC20 public token; // The token being sold
+    IERC20 public weth;
+    IERC20 public usdc;
     uint256 public totalTokens = 0; // Total number of tokens for sale
-    uint256 public tokensSold; // Number of tokens sold so far
     uint256 public endTime; // End time of presale
     uint256 public currentPhase = 0;
 
@@ -46,15 +47,21 @@ contract Presale is Ownable {
         _;
     }
 
-    constructor(IERC20 _token, uint256 _endTime) {
-        // Aggregator: DAI/USD
-        priceFeed = AggregatorV3Interface(
-            0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43
-        );
+    constructor(
+        IERC20 _token,
+        uint256 _endTime,
+        IERC20 _weth,
+        IERC20 _usdc,
+        address _priceFeed
+    ) {
+        // Aggregator: ETH/USD
+        priceFeed = AggregatorV3Interface(_priceFeed);
 
         token = _token;
         totalTokens = 5000000;
         endTime = _endTime;
+        weth = _weth;
+        usdc = _usdc;
 
         // Phase 0
         phases[0] = Phase({
@@ -73,7 +80,7 @@ contract Presale is Ownable {
             tokensAvailable: 875000,
             tokenPrice: 44,
             tokensSold: 0,
-            isStarted: true
+            isStarted: false
         });
 
         // Phase 2
@@ -83,7 +90,7 @@ contract Presale is Ownable {
             tokensAvailable: 875000,
             tokenPrice: 46,
             tokensSold: 0,
-            isStarted: true
+            isStarted: false
         });
 
         // Phase 3
@@ -93,7 +100,7 @@ contract Presale is Ownable {
             tokensAvailable: 875000,
             tokenPrice: 48,
             tokensSold: 0,
-            isStarted: true
+            isStarted: false
         });
 
         // Phase 4
@@ -103,14 +110,14 @@ contract Presale is Ownable {
             tokensAvailable: 875000,
             tokenPrice: 50,
             tokensSold: 0,
-            isStarted: true
+            isStarted: false
         });
     }
 
     /**
      * Returns the latest price.
      */
-    function getLatestPrice() public view returns (int) {
+    function getETHLatestPrice() public view returns (int) {
         // prettier-ignore
         (
             /* uint80 roundID */,
@@ -157,14 +164,17 @@ contract Presale is Ownable {
         return 1;
     }
 
-    function buyTokens() public payable claimEnabled {
+    function buyTokens(
+        uint256 _amount,
+        bool _isWithWETH
+    ) public payable claimEnabled {
         require(currentPhase < 5, "Presale has ended");
         require(
             whitelist[msg.sender] || currentPhase > 0,
             "You are not whitelisted"
         );
 
-        uint256 tokensToBuy = getTokenAmount();
+        uint256 tokensToBuy = _amount;
         require(tokensToBuy > 0, "Invalid amount");
 
         // Check if investor is within the min/max range for the current phase
@@ -172,29 +182,55 @@ contract Presale is Ownable {
         uint256 max = phases[currentPhase].maxPurchase;
         uint256 currentBalance = balances[msg.sender] + tokensToBuy;
 
+        require(
+            phases[currentPhase].tokensSold + tokensToBuy <=
+                phases[currentPhase].tokensAvailable,
+            "Insufficient token amount"
+        );
+
         require(currentBalance >= min, "Amount is below minimum purchase");
         require(
             max == 0 || currentBalance <= max,
             "Amount is above maximum purchase"
         );
 
-        // Transfer USDT from buyer to presale contract
-        uint256 usdtAmount = token.allowance(msg.sender, address(this));
-        require(
-            usdtAmount >= tokensToBuy * phases[currentPhase].tokenPrice,
-            "Insufficient USDT allowance"
-        );
+        if (_isWithWETH) {
+            // Transfer WETH from buyer to presale contract
+            uint256 wethAllowance = weth.allowance(msg.sender, address(this));
+            require(
+                wethAllowance >=
+                    (tokensToBuy * phases[currentPhase].tokenPrice) /
+                        getETHLatestPrice(),
+                "Insufficient WETH allowance"
+            );
 
-        bool transferSuccess = token.transferFrom(
-            msg.sender,
-            address(this),
-            tokensToBuy * phases[currentPhase].tokenPrice
-        );
-        require(transferSuccess, "USDT transfer failed");
+            bool transferSuccess = weth.transferFrom(
+                msg.sender,
+                address(this),
+                (tokensToBuy * phases[currentPhase].tokenPrice) /
+                    getETHLatestPrice()
+            );
+            require(transferSuccess, "WETH transfer failed");
+        } else {
+            // Transfer USDC from buyer to presale contract
+            uint256 usdtAllowance = usdc.allowance(msg.sender, address(this));
+            require(
+                usdtAllowance >= tokensToBuy * phases[currentPhase].tokenPrice,
+                "Insufficient USDC allowance"
+            );
+
+            bool transferSuccess = usdc.transferFrom(
+                msg.sender,
+                address(this),
+                tokensToBuy * phases[currentPhase].tokenPrice
+            );
+            require(transferSuccess, "USDC transfer failed");
+        }
 
         // Update investor's investment amount and total amount raised
         balances[msg.sender] = currentBalance;
-        // totalRaised = totalRaised.add(msg.value);
+
+        phases[currentPhase].tokensSold += tokensToBuy;
 
         emit TokensPurchased(
             msg.sender,
