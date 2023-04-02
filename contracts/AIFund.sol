@@ -19,13 +19,12 @@ contract AIFund is ERC20, Ownable {
 
     IERC20 public aifArbPair;
 
-    constructor(address _devTo, IERC20 _aifArbPair) ERC20("AI Fund", "AIF") {
+    constructor(address _devTo) ERC20("AI Fund", "AIF") {
         require(_devTo != address(0), "Dev address is zero");
 
         _mint(msg.sender, maxSupply);
 
         devTo = _devTo;
-        aifArbPair = _aifArbPair;
 
         // Buy Fee is 1%
         buyFee = 1;
@@ -78,5 +77,21 @@ contract AIFund is ERC20, Ownable {
         }
 
         return true;
+    }
+
+    function setAifArbPair(IERC20 _aifArbPair) external onlyOwner {
+        require(
+            address(_aifArbPair) != address(0),
+            "Pool address must be valid"
+        );
+
+        aifArbPair = _aifArbPair;
+    }
+
+    /// @dev Only owner can set dev wallet
+    function setDevToAddress(address _devTo) external onlyOwner {
+        require(_devTo != address(0), "Dev wallet must be valid address");
+
+        devTo = _devTo;
     }
 }

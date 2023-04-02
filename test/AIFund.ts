@@ -19,12 +19,10 @@ describe("AIFund contract", function () {
     burnAddress = "0x000000000000000000000000000000000000dEaD";
 
     AIFund = await ethers.getContractFactory("AIFund");
-    aifund = await AIFund.connect(owner).deploy(
-      devTo.address,
-      aifArbPair.address
-    );
+    aifund = await AIFund.connect(owner).deploy(devTo.address);
 
     await aifund.deployed();
+    await aifund.setAifArbPair(aifArbPair.address);
   });
 
   it("should deploy correctly", async function () {
