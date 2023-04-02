@@ -12,10 +12,7 @@ describe("Presale", () => {
     [owner, buyer1, buyer2] = await ethers.getSigners();
 
     const Presale = await ethers.getContractFactory("Presale");
-    presale = await Presale
-      .deploy
-      // Pass in contract constructor arguments here
-      ();
+    presale = await Presale.deploy();
   });
 
   describe("buyTokens", () => {

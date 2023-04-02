@@ -6,8 +6,8 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
-    "deploy:mainnet": "npx hardhat run --network mainnet scripts/deploy.js",
-    "deploy:testnet": "npx hardhat run --network testnet scripts/deploy.js"
+    "deploy:mainnet": "npx hardhat run --network mainnet scripts/deploy.ts",
+    "deploy:testnet": "npx hardhat run --network testnet scripts/deploy.ts"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",
