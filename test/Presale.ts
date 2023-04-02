@@ -1,23 +1,21 @@
 import { ethers } from "hardhat";
-import { Signer } from "ethers";
 import { expect } from "chai";
-import { Presale } from "../typechain/Presale";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("Presale", () => {
   let owner: SignerWithAddress;
   let buyer1: SignerWithAddress;
   let buyer2: SignerWithAddress;
-  let presale: Presale;
+  let presale: any;
 
   beforeEach(async () => {
     [owner, buyer1, buyer2] = await ethers.getSigners();
 
     const Presale = await ethers.getContractFactory("Presale");
-    presale = (await Presale
+    presale = await Presale
       .deploy
       // Pass in contract constructor arguments here
-      ()) as Presale;
+      ();
   });
 
   describe("buyTokens", () => {

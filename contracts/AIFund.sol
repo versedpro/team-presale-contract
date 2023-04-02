@@ -19,21 +19,18 @@ contract AIFund is ERC20, Ownable {
 
     IERC20 public aifArbPair;
 
-    constructor(address _devTo) ERC20("AI Fund", "AIF") {
+    constructor(address _devTo, IERC20 _aifArbPair) ERC20("AI Fund", "AIF") {
         require(_devTo != address(0), "Dev address is zero");
 
         _mint(msg.sender, maxSupply);
 
         devTo = _devTo;
+        aifArbPair = _aifArbPair;
 
         // Buy Fee is 1%
         buyFee = 1;
         // Sell Fee is 1%
         sellFee = 1;
-    }
-
-    function mint(address to, uint256 amount) public onlyOwner {
-        _mint(to, amount);
     }
 
     function transfer(
@@ -42,16 +39,18 @@ contract AIFund is ERC20, Ownable {
     ) public virtual override returns (bool) {
         if (msg.sender == address(aifArbPair)) {
             // To deduct 1% of the transaction value and send it to the burn address
-            // if the transfer is from the AIF-ETH pair to the user's wallet
-            uint256 burnFee = amount / sellFee;
+            // if the transfer is from the AIF-ARB pair to the user's wallet
+            uint256 burnFee = (amount / 100) * sellFee;
             super.transfer(burnAddress, burnFee);
             super.transfer(recipient, amount - burnFee);
-        } else {
+        } else if (recipient == address(aifArbPair)) {
             // Tp deduct 1% of the transaction value and send it to the dev wallet
-            // if the transfer is from the user's wallet to the AIF-ETH pair
-            uint256 devFee = amount / buyFee;
+            // if the transfer is from the user's wallet to the AIF-ARB pair
+            uint256 devFee = (amount / 100) * buyFee;
             super.transfer(devTo, devFee);
             super.transfer(recipient, amount - devFee);
+        } else {
+            super.transfer(recipient, amount);
         }
 
         return true;
@@ -64,16 +63,18 @@ contract AIFund is ERC20, Ownable {
     ) public virtual override returns (bool) {
         if (sender == address(aifArbPair)) {
             // To deduct 1% of the transaction value and send it to the burn address
-            // if the transfer is from the AIF-ETH pair to the user's wallet
-            uint256 burnFee = amount / sellFee;
+            // if the transfer is from the AIF-ARB pair to the user's wallet
+            uint256 burnFee = (amount / 100) * sellFee;
             super.transferFrom(sender, burnAddress, burnFee);
             super.transferFrom(sender, recipient, amount - burnFee);
-        } else {
+        } else if (recipient == address(aifArbPair)) {
             // Tp deduct 1% of the transaction value and send it to the dev wallet
-            // if the transfer is from the user's wallet to the AIF-ETH pair
-            uint256 devFee = amount / buyFee;
+            // if the transfer is from the user's wallet to the AIF-ARB pair
+            uint256 devFee = (amount / 100) * buyFee;
             super.transferFrom(sender, devTo, devFee);
             super.transferFrom(sender, recipient, amount - devFee);
+        } else {
+            super.transferFrom(sender, recipient, amount);
         }
 
         return true;
