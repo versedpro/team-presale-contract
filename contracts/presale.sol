@@ -235,7 +235,7 @@ contract Presale is Ownable, ReentrancyGuard {
             block.timestamp > endTime && _timestamp > endTime,
             "Presale is still ongoing"
         );
-        uint256 balance = balances[msg.sender];
+        uint256 balance = balances[msg.sender] * 10 ** 18;
         require(balance > 0, "No tokens to claim");
 
         balances[msg.sender] = 0;
