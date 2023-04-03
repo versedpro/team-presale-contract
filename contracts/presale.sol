@@ -65,46 +65,51 @@ contract Presale is Ownable, ReentrancyGuard {
 
         // Phase 0
         phases[0] = Phase({
-            minPurchase: 300,
+            minPurchase: 3,
+            // minPurchase: 300,
             maxPurchase: 2500,
             tokensAvailable: 1500000,
-            tokenPrice: 40,
+            tokenPrice: 40000000000000000,
             tokensSold: 0
         });
 
         // Phase 1
         phases[1] = Phase({
-            minPurchase: 300,
+            minPurchase: 3,
+            // minPurchase: 300,
             maxPurchase: 5000,
             tokensAvailable: 875000,
-            tokenPrice: 44,
+            tokenPrice: 44000000000000000,
             tokensSold: 0
         });
 
         // Phase 2
         phases[2] = Phase({
-            minPurchase: 200,
+            minPurchase: 2,
+            // minPurchase: 200,
             maxPurchase: 7500,
             tokensAvailable: 875000,
-            tokenPrice: 46,
+            tokenPrice: 460000000000000000,
             tokensSold: 0
         });
 
         // Phase 3
         phases[3] = Phase({
-            minPurchase: 200,
+            minPurchase: 2,
+            // minPurchase: 200,
             maxPurchase: 7500,
             tokensAvailable: 875000,
-            tokenPrice: 48,
+            tokenPrice: 480000000000000000,
             tokensSold: 0
         });
 
         // Phase 4
         phases[4] = Phase({
-            minPurchase: 100,
+            minPurchase: 1,
+            // minPurchase: 100,
             maxPurchase: 10000,
             tokensAvailable: 875000,
-            tokenPrice: 50,
+            tokenPrice: 500000000000000000,
             tokensSold: 0
         });
     }
@@ -121,7 +126,7 @@ contract Presale is Ownable, ReentrancyGuard {
             /*uint timeStamp*/,
             /*uint80 answeredInRound*/
         ) = priceFeed.latestRoundData();
-        return uint256(price) / 10 ** 8;
+        return (uint256(price) * 10 ** 18) / 10 ** 8;
     }
 
     // Whitelist function for Phase 0
