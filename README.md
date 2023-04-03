@@ -1,13 +1,21 @@
-# Sample Hardhat Project
+# AIF project tokens
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+This project contains token(ERC20), presale, timelock contracts
 
-Try running some of the following tasks:
+**Deployment**
+
+Try running following tasks in order:
 
 ```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
+npx hardhat run --network goerli .\scripts\deploy.ts
+npx hardhat verify --network goerli <TOKEN_DEPLOYED> <DEV_WALLET_ADDRESS>
 ```
+
+Edit the `deploy_presale.ts` file with parameters like address of token deployed. Read commnets on that file.
+
+```shell
+npx hardhat run --network goerli .\scripts\deploy_presale.ts
+npx hardhat verify --network goerli <CONTRACT_DEPLOYED> <contruct_params>
+```
+
+Transfer 5000,000 tokens to presale contract to lock on presale
