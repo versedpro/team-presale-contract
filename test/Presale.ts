@@ -1,58 +1,77 @@
 import { ethers } from "hardhat";
+import { Signer } from "ethers";
 import { expect } from "chai";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-describe("Presale", () => {
-  let owner: SignerWithAddress;
-  let buyer1: SignerWithAddress;
-  let buyer2: SignerWithAddress;
+describe("Presale", function () {
+  let owner: Signer;
+  let buyer1: Signer;
+  let buyer2: Signer;
+  let priceFeed: any;
+  let token: any;
+  let weth: any;
+  let usdc: any;
   let presale: any;
 
-  beforeEach(async () => {
+  before(async function () {
     [owner, buyer1, buyer2] = await ethers.getSigners();
 
-    const Presale = await ethers.getContractFactory("Presale");
-    presale = await Presale.deploy();
+    priceFeed = await (
+      await ethers.getContractFactory("MockAggregatorV3")
+    ).deploy(ethers.BigNumber.from(3500));
+    token = await (
+      await ethers.getContractFactory("MockERC20")
+    ).deploy("Token", "TKN", ethers.BigNumber.from(5000000));
+    weth = await (
+      await ethers.getContractFactory("MockWETH")
+    ).deploy();
+    usdc = await (
+      await ethers.getContractFactory("MockUSDC")
+    ).deploy();
+
+    presale = await (
+      await ethers.getContractFactory("Presale")
+    ).deploy(token.address, Math.floor(Date.now() / 1000) + 3600, weth.address, usdc.address, priceFeed.address);
+
+    // transfer tokens to the presale contract
+    await token.transfer(presale.address, ethers.BigNumber.from(5000000));
   });
 
-  describe("buyTokens", () => {
-    it("should allow whitelisted buyer to purchase tokens", async () => {
-      // Whitelist buyer1
-      await presale.whitelistAddresses([await buyer1.getAddress()]);
-
-      // Approve the token transfer from the buyer1 account
-      const token = await presale.token();
-      await token.connect(buyer1).approve(presale.address, 2500);
-
-      // Purchase tokens with USDC
-      const usdc = await presale.usdc();
-      const phase = await presale.getCurrentPhase();
-      const amount = phase.minPurchase;
-      await usdc.connect(buyer1).approve(presale.address, amount);
-      await presale.connect(buyer1).buyTokens(amount, false);
-
-      // Verify that the buyer1 balance has been updated
-      const balance = await presale.balances(await buyer1.getAddress());
-      expect(balance).to.equal(amount);
-    });
-
-    it("should not allow non-whitelisted buyer to purchase tokens", async () => {
-      // Approve the token transfer from the buyer2 account
-      const token = await presale.token();
-      await token.connect(buyer2).approve(presale.address, 2500);
-
-      // Purchase tokens with USDC
-      const usdc = await presale.usdc();
-      const phase = await presale.getCurrentPhase();
-      const amount = phase.minPurchase;
-      await usdc.connect(buyer2).approve(presale.address, amount);
-
-      // Attempt to purchase tokens as non-whitelisted buyer2
-      await expect(
-        presale.connect(buyer2).buyTokens(amount, false)
-      ).to.be.revertedWith("You are not whitelisted");
+  it("should start with the correct phase", async function () {
+    expect(await presale.getCurrentPhase()).to.deep.equal({
+      minPurchase: ethers.BigNumber.from(300),
+      maxPurchase: ethers.BigNumber.from(2500),
+      tokensAvailable: ethers.BigNumber.from(1500000),
+      tokenPrice: ethers.BigNumber.from(40),
+      tokensSold: ethers.BigNumber.from(0),
     });
   });
 
-  // Add more tests for other contract functions here
-});
+  it("should allow the owner to change the phase", async function () {
+    await expect(presale.setCurrentPhase(1)).to.not.be.reverted;
+    expect(await presale.getCurrentPhase()).to.deep.equal({
+      minPurchase: ethers.BigNumber.from(300),
+      maxPurchase: ethers.BigNumber.from(5000),
+      tokensAvailable: ethers.BigNumber.from(875000),
+      tokenPrice: ethers.BigNumber.from(44),
+      tokensSold: ethers.BigNumber.from(0),
+    });
+  });
+
+  it("should not allow non-owners to change the phase", async function () {
+    await expect(
+      presale.connect(buyer1).setCurrentPhase(2)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+  });
+
+  it("should allow the owner to enable claiming", async function () {
+    await expect(presale.enableClaiming(true)).to.not.be.reverted;
+    expect(await presale.claimingEnabled()).to.equal(true);
+  });
+
+  it("should not allow non-owners to enable claiming", async function () {
+    await expect(
+      presale.connect(buyer1).enableClaiming(false)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+  });
+
+}

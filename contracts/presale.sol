@@ -69,7 +69,7 @@ contract Presale is Ownable, ReentrancyGuard {
             // minPurchase: 300,
             maxPurchase: 2500,
             tokensAvailable: 1500000,
-            tokenPrice: 40000000000000000,
+            tokenPrice: 400000000000000000,
             tokensSold: 0
         });
 
@@ -79,7 +79,7 @@ contract Presale is Ownable, ReentrancyGuard {
             // minPurchase: 300,
             maxPurchase: 5000,
             tokensAvailable: 875000,
-            tokenPrice: 44000000000000000,
+            tokenPrice: 440000000000000000,
             tokensSold: 0
         });
 
@@ -126,6 +126,7 @@ contract Presale is Ownable, ReentrancyGuard {
             /*uint timeStamp*/,
             /*uint80 answeredInRound*/
         ) = priceFeed.latestRoundData();
+        // ETH has 8 decimals
         return (uint256(price) * 10 ** 18) / 10 ** 8;
     }
 
