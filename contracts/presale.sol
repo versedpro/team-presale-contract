@@ -58,58 +58,58 @@ contract Presale is Ownable, ReentrancyGuard {
         priceFeed = AggregatorV3Interface(_priceFeed);
 
         token = _token;
-        totalTokens = 5000000;
+        totalTokens = 5000000000000000000000000; // 5000000 token
         endTime = _endTime;
         weth = _weth;
         usdc = _usdc;
 
         // Phase 0
         phases[0] = Phase({
-            minPurchase: 3,
-            // minPurchase: 300,
-            maxPurchase: 2500,
-            tokensAvailable: 1500000,
-            tokenPrice: 400000000000000000,
+            minPurchase: 3000000000000000000, // 3 token for test
+            // minPurchase: 300000000000000000000, // 300 token,
+            maxPurchase: 2500000000000000000000, // 2500 token,
+            tokensAvailable: 1500000000000000000000000, // 1500000 token,
+            tokenPrice: 400000000000000000, // 0.4 USD,
             tokensSold: 0
         });
 
         // Phase 1
         phases[1] = Phase({
-            minPurchase: 3,
-            // minPurchase: 300,
-            maxPurchase: 5000,
-            tokensAvailable: 875000,
-            tokenPrice: 440000000000000000,
+            minPurchase: 3000000000000000000, // 3 token for test
+            // minPurchase: 300000000000000000000, // 300 token,
+            maxPurchase: 5000000000000000000000, // 5000 token,
+            tokensAvailable: 875000000000000000000000, // 875000 token,
+            tokenPrice: 440000000000000000, // 0.44 USD,
             tokensSold: 0
         });
 
         // Phase 2
         phases[2] = Phase({
-            minPurchase: 2,
-            // minPurchase: 200,
-            maxPurchase: 7500,
-            tokensAvailable: 875000,
-            tokenPrice: 460000000000000000,
+            minPurchase: 2000000000000000000, // 2 token for test
+            // minPurchase: 200000000000000000000, // 200 token
+            maxPurchase: 7500000000000000000000, // 7500 token,
+            tokensAvailable: 875000000000000000000000, // 875000 token,
+            tokenPrice: 460000000000000000, // 0.46 USD,
             tokensSold: 0
         });
 
         // Phase 3
         phases[3] = Phase({
-            minPurchase: 2,
-            // minPurchase: 200,
-            maxPurchase: 7500,
-            tokensAvailable: 875000,
-            tokenPrice: 480000000000000000,
+            minPurchase: 2000000000000000000, // 2 token for test
+            // minPurchase: 200000000000000000000, // 200 token
+            maxPurchase: 7500000000000000000000, // 7500 token,
+            tokensAvailable: 875000000000000000000000, // 875000 token,
+            tokenPrice: 480000000000000000, // 0.48 USD,
             tokensSold: 0
         });
 
         // Phase 4
         phases[4] = Phase({
-            minPurchase: 1,
-            // minPurchase: 100,
-            maxPurchase: 10000,
-            tokensAvailable: 875000,
-            tokenPrice: 500000000000000000,
+            minPurchase: 1000000000000000000, // 1 token for test
+            // minPurchase: 100000000000000000000, // 100 token
+            maxPurchase: 10000000000000000000000, // 10000 token,
+            tokensAvailable: 875000000000000000000000, // 875000 token,
+            tokenPrice: 500000000000000000, // 0.5 USD,
             tokensSold: 0
         });
     }
@@ -135,6 +135,11 @@ contract Presale is Ownable, ReentrancyGuard {
         address[] calldata _addresses
     ) external onlyOwner {
         for (uint256 i = 0; i < _addresses.length; i++) {
+            require(
+                _addresses[i] != address(0),
+                "Whitelist address must be valid"
+            );
+
             whitelist[_addresses[i]] = true;
             emit Whitelisted(_addresses[i]);
         }
@@ -157,8 +162,11 @@ contract Presale is Ownable, ReentrancyGuard {
     function buyTokens(
         uint256 _amount,
         bool _isWithWETH
-    ) public payable nonReentrant claimEnabled {
-        require(currentPhase < 5, "Presale has ended");
+    ) public payable nonReentrant {
+        require(
+            block.timestamp < endTime || currentPhase < 5,
+            "Presale has ended"
+        );
         require(
             whitelist[msg.sender] || currentPhase > 0,
             "You are not whitelisted"
@@ -205,14 +213,15 @@ contract Presale is Ownable, ReentrancyGuard {
             // Transfer USDC from buyer to presale contract
             uint256 usdtAllowance = usdc.allowance(msg.sender, address(this));
             require(
-                usdtAllowance >= tokensToBuy * phases[currentPhase].tokenPrice,
+                usdtAllowance >=
+                    (tokensToBuy * phases[currentPhase].tokenPrice) / 10 ** 18,
                 "Insufficient USDC allowance"
             );
 
             bool transferSuccess = usdc.transferFrom(
                 msg.sender,
                 address(this),
-                tokensToBuy * phases[currentPhase].tokenPrice
+                (tokensToBuy * phases[currentPhase].tokenPrice) / 10 ** 18
             );
             require(transferSuccess, "USDC transfer failed");
         }
