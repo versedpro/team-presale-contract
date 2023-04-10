@@ -73,8 +73,8 @@ contract Collectible is
         isMintingDisabled = false;
         _registerInterface(_INTERFACE_ID_ERC2981);
 
-        maxSupply[0] = 500;
         maxSupply[1] = 4500;
+        maxSupply[2] = 500;
     }
 
     /// @dev burn token with id and value
