@@ -15,7 +15,7 @@ Edit the `deploy_presale.ts` file with parameters like address of token deployed
 
 ```shell
 npx hardhat run --network goerli .\scripts\deploy_presale.ts
-npx hardhat verify --network goerli <CONTRACT_DEPLOYED> <contruct_params>
+npx hardhat verify --network goerli <CONTRACT_DEPLOYED> <construct_params>
 ```
 
 Transfer 5000,000 tokens to presale contract to lock on presale
