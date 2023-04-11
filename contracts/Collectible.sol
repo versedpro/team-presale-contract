@@ -109,7 +109,9 @@ contract Collectible is
     {
         return
             bytes(tokenURIPrefix).length > 0
-                ? string(abi.encodePacked(tokenURIPrefix, _id.toString()))
+                ? string(
+                    abi.encodePacked(tokenURIPrefix, _id.toString(), ".json")
+                )
                 : super.uri(_id);
     }
 
@@ -212,6 +214,11 @@ contract Collectible is
         royaltyPercent = _royaltyPercent;
     }
 
+    /// @notice Set batch of NFT assets data
+    /// @param _tokenCount number of tokens
+    /// @param _mintPrices array of mintprices
+    /// @param _maxSupplies array of max supplies
+    /// @param _royaltyPercent royalty percet
     function setInfo(
         uint256 _tokenCount,
         uint256[] memory _mintPrices,
