@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 async function main() {
   const Presale = await ethers.getContractFactory("Presale");
   const presale = await Presale.deploy(
-    "0x10f7c3A078eD8dc078f0528B520488207D38b28e", // AIF on Goerli
+    "0x0FB3493Ed3A77d9643aF48E6629367A5b79c1C3a", // AIF on Goerli
     1682899200, // Start of May
     "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6", // WETH address on Goerli
     "0xEEa85fdf0b05D1E0107A61b4b4DB1f345854B952", // USDC address on Goerli
