@@ -56,7 +56,7 @@ contract AIFundNFTCollection is ERC721r, Ownable, ReentrancyGuard {
                 ? string(
                     abi.encodePacked(
                         baseURI,
-                        tokenId < 4500 ? "silver" : "gold"
+                        tokenId < 499 ? "gold" : "silver"
                     )
                 )
                 : "";
