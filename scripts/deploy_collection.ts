@@ -28,14 +28,11 @@ async function main() {
       Info: ethers.utils.formatEther(await deployer!.getBalance()),
     };
 
-    const NFT = await ethers.getContractFactory("Collectible");
+    const NFT = await ethers.getContractFactory("AIFundNFTCollection");
 
     // Deploy the contract
     const NFTInst = await NFT.deploy(
-      "AI Fund NFT Collection",
-      "AIFNFT",
-      "ipfs://Qme8ju6dNDqVwFZExX81jknnrHC1g64r3T9h7rFR1o1kT4/",
-      deployer.address
+      "ipfs://QmThsREirvbBJvzgqmH6iDH87r8uTHmBenrfgLchmwZmbY/"
     );
     await NFTInst.deployed();
 

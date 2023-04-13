@@ -26,17 +26,39 @@ describe("AIFundNFTCollection", function () {
   it("should mint NFTs correctly", async function () {
     const initialBalance = await nftCollection.balanceOf(buyer1.address);
     const quantity = 3;
-    await nftCollection.connect(buyer1).mint(quantity);
+    const mintPrice = ethers.BigNumber.from(await nftCollection.mintPrice());
+    await nftCollection
+      .connect(buyer1)
+      .mint(quantity, { value: mintPrice.mul(quantity) });
     const finalBalance = await nftCollection.balanceOf(buyer1.address);
     expect(finalBalance).to.equal(initialBalance.add(quantity));
+  });
+
+  it("should sell NFTs with correct price", async function () {
+    const quantity = 5;
+    const mintPrice = ethers.BigNumber.from(await nftCollection.mintPrice());
+    const totalPrice = mintPrice.mul(quantity);
+
+    const oldBalanceOfNft = await ethers.provider.getBalance(
+      nftCollection.address
+    );
+
+    await nftCollection.connect(buyer1).mint(quantity, {
+      value: totalPrice,
+    });
+
+    expect(await ethers.provider.getBalance(nftCollection.address)).to.equal(
+      oldBalanceOfNft.add(totalPrice)
+    );
   });
 
   it("should mint random NFTs", async function () {
     const quantity = 10;
     let tokenIdsBigNumber: BigNumber[] = [];
     let tokenIds: Number[] = [];
+    const mintPrice = ethers.BigNumber.from(await nftCollection.mintPrice());
     // Mint NFTs
-    await nftCollection.mint(quantity);
+    await nftCollection.mint(quantity, { value: mintPrice.mul(quantity) });
     // Store the minted token IDs
     // for (let i = 0; i < quantity; i++) {
     //   tokenIds.push(await nftCollection.tokenOfOwnerByIndex(buyer1.address));
@@ -55,7 +77,8 @@ describe("AIFundNFTCollection", function () {
   });
 
   it("should return the correct token URI", async function () {
-    await nftCollection.mint(1);
+    const mintPrice = ethers.BigNumber.from(await nftCollection.mintPrice());
+    await nftCollection.mint(1, { value: mintPrice.mul(1) });
     const tokenId = (await nftCollection.tokenOf(owner.address))[0];
     const expectedURI = `https://api.example.com/${
       tokenId < 4500 ? "silver" : "gold"

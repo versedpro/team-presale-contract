@@ -2,19 +2,41 @@
 pragma solidity ^0.8.9;
 
 import "./library/ERC721R.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract AIFundNFTCollection is ERC721r {
+contract AIFundNFTCollection is ERC721r, Ownable, ReentrancyGuard {
     string public tokenURIPrefix;
+    uint256 public mintPrice = 0.05 ether; // 0.05 ETH
+
+    bool public isMintingDisabled;
 
     // 5_000 is the number of tokens in the colletion
     constructor(
         string memory _tokenURIPrefix
     ) ERC721r("AI Fund NFT Collection", "AIFNFT", 5_000) {
         tokenURIPrefix = _tokenURIPrefix;
+        isMintingDisabled = false;
     }
 
-    function mint(uint quantity) public {
+    function mint(uint quantity) external payable nonReentrant {
+        require(isMintingDisabled == false, "Minting is disabled");
+        require(msg.value >= mintPrice * quantity, "Insufficient funds");
+
         _mintRandom(msg.sender, quantity);
+    }
+
+    function setMintPrice(uint256 _mintPrice) external onlyOwner {
+        mintPrice = _mintPrice;
+    }
+
+    function setMintingDisabled(bool _value) external onlyOwner {
+        isMintingDisabled = _value;
+    }
+
+    /// @notice Withdraw ETH to owner
+    function withdrawFunds() external onlyOwner {
+        payable(owner()).transfer(address(this).balance);
     }
 
     /**
