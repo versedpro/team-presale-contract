@@ -186,9 +186,9 @@ contract Presale is Ownable, ReentrancyGuard {
             "Insufficient token amount"
         );
 
-        require(currentBalance >= min, "Amount is below minimum purchase");
+        require(_amount >= min, "Amount is below minimum purchase");
         require(
-            max == 0 || currentBalance <= max,
+            max == 0 || _amount <= max,
             "Amount is above maximum purchase"
         );
 
