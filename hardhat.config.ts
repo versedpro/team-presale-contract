@@ -35,7 +35,7 @@ const config: Config = {
   },
   etherscan: {
     customChains: [],
-    apiKey: { goerli: "T3S7NPQWMYC4ZTSS4YTU3F848XP7JAD2CE" },
+    apiKey: { goerli: "T3S7NPQWMYC4ZTSS4YTU3F848XP7JAD2CE", arbitrumOne: "9C1TF6HAWR43CHAUFQ1ZUCHG7NBXECWBDN" },
   },
 };
 
